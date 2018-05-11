@@ -1,0 +1,211 @@
+---
+title: "Understanding different visualization methods using Trees, Rubber and oddbooks dataset"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Trees
+Let us check the structure of trees dataset
+```{r trees}
+library(ggplot2)
+
+summary(trees)
+str(trees)
+
+sapply(trees, is.factor)
+```
+
+We make use of linear model and then plot it
+
+```{r plot }
+model <- lm(Girth ~ Height, data = trees)
+model1 <- lm(Volume ~ Height, data = trees)
+
+plot(trees$Height, trees$Girth, main = 'Girth vs Height', xlab = 'Height', ylab = 'Girth', col = 'blue')
+
+abline(model, col = 'red')
+
+plot(trees$Height, trees$Volume, main = 'Volume vs Height', xlab = 'Height', ylab = 'Volume', col = 'blue')
+
+abline(model1, col = 'red')
+
+```
+
+The same can be performed using ggplot
+```{r using ggplot}
+ggplot(trees, aes(Height,Girth), alpha = 0.4) + geom_point(aes(color = Volume)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+ggplot(trees, aes(Height,Volume), alpha = 0.4) + geom_point(aes(color = Girth)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+```
+
+Histogram and density 
+
+```{R Hist}
+hist(trees$Girth, col = 'grey', xlab = "Trees", main = "Histogram of Girth", breaks = 5 ) 
+
+hist(trees$Girth, col = 'grey', xlab = "Trees", main = "Histogram of Girth", freq = F) 
+d <- density(trees$Girth)
+lines(d, lwd = 2, col = 'darkblue')
+
+curve(dnorm(x, mean=mean(trees$Girth), sd=sd(trees$Girth)), add=TRUE, col='red', lwd=2)
+
+hist(trees$Height)
+hist(trees$Volume)
+```
+
+
+
+
+
+The same can be performed using ggplot
+```{R hist ggplot}
+ggplot(trees, aes(Girth)) + geom_histogram(fill = 'lightblue', binwidth = 1, color = 'darkblue') + theme_bw()
+
+ggplot(trees, aes(Girth)) + geom_histogram(aes(y=..density..) ,binwidth = 1, color="darkblue", fill="lightblue" ) + theme_bw() + geom_density(alpha=.2, fill="#FF6666")
+
+
+```
+
+Boxplot and rug
+
+```{R b}
+boxplot(trees$Girth, col = 'lightblue', horizontal = T, xlab = 'Girth', main = 'Tree Girth Data', frame.plot = F, boxwex = 0.6, notch = T)
+rug(trees$Girth, side = 1)
+
+ggplot(trees, aes(x='',y=Girth)) + geom_boxplot(color = 'darkblue', fill = 'lightblue', alpha = 0.4)+ theme_bw() + coord_flip() + ggtitle("Tree Girth Data")
+```
+
+rnorm and qqnorm
+
+```{R rnorm}
+qqnorm(trees$Girth)
+qqline(trees$Girth, col = 'red')
+
+qqnorm(trees$Volume)
+qqline(trees$Volume, col = 'red')
+
+log.Volume <- log(trees$Volume)
+qqnorm(log.Volume)
+qqline(log.Volume, col = 'red')
+
+par(mfrow = c(2,4))
+qqnorm(trees$Height)
+qqline(trees$Height, col = 'red')
+for (i in 1:7){ qqnorm(rnorm(31),xlab="", ylab="Simulated lengths",
+                      main="Simulated")
+qqline(rnorm(31), col = 'red')
+}
+```
+
+
+histogram for rnorm and dnorm
+
+```{R hist rnorm}
+par(mfrow=c(1,1))
+random <-  rnorm(1000,0,1)
+
+hist(random, main="Random draw from Std Normal", cex.axis=.8, freq = F, xlim = c(-4,4))
+curve(dnorm(x, mean(random), sd(random)), add=TRUE, col="darkblue", lwd=2)
+
+```
+
+##Rubber
+
+Let us view and plot rubber dataset
+
+```{R rubber}
+library(MASS)
+
+plot(Rubber)
+
+ggplot(Rubber, aes(hard, loss)) + geom_point(aes(color = tens)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+ggplot(Rubber, aes(tens, loss)) + geom_point(aes(color = hard)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+```
+
+We can see a negative correlation between loss and hard/tens
+
+```{r summ}
+Rubber.lm <- lm(loss~hard+tens, data=Rubber)
+
+summary(Rubber.lm)
+```
+
+The intercept 885.16 indicates the loss at hardness = 0  and tensile strength = 0
+The increase in hardness by 1 will lead to decrease in loss by 6.57
+The increase in tensile strength by 1 will lead to decrease in loss by 1.37
+The p value is 0.001 which indicates the confidence of 99.999
+
+There is a negative corelation between loss and hardness/tensile strength
+
+Let us plot the linear model using plot and termplot
+
+```{r lm }
+plot(Rubber.lm)
+
+par(mfrow=c(1,2))
+termplot(Rubber.lm, partial=TRUE, smooth=panel.smooth)
+par(mfrow=c(1,1))
+```
+
+
+## Oddbooks
+Let us install the package DAAG which consists of Oddbooks dataset
+
+```{r od}
+library(DAAG)
+```
+
+Let us plot using ggplot
+
+```{r gg odd}
+ggplot(oddbooks, aes(thick, weight)) + geom_point(aes(color = breadth)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+ggplot(oddbooks, aes(thick+ breadth, weight)) + geom_point(aes(color = breadth)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+ggplot(oddbooks, aes(thick+height+breadth, weight)) + geom_point(aes(color = thick)) + theme_bw() +geom_smooth(method = 'lm', formula = y ~x, se = F) + scale_color_continuous(high = "#FF6E2E", low = "#55D8CE")
+
+```
+
+
+Using linear model on oddbooks
+
+```{r odd lm}
+logbooks <- log(oddbooks)
+
+logbooks.lm1 <- lm(weight~thick,data=logbooks)
+summary(logbooks.lm1)$coef
+
+```
+
+There is a negative correlation between weight and thickness
+At 0 thickness the weight is 9.69 and with the increase in Weight by 1 the thickness will decrease by 1.07 
+This gives us a very weird result as generally weight should increase with increase in thickness
+
+```{r odd lm1}
+logbooks.lm2<-lm(weight~thick+height,data=logbooks)
+ summary(logbooks.lm2)$coef
+```
+There is a negative correlation between weight and thickness/height
+ At 0 thickness/height the weight is -1.26 and with the increase in Weight by 1 the thickness will increase by 0.3  and height by 2.11 
+However we can see a low confidence interval for thickness and Weight 
+
+```{r odd lm2}
+logbooks.lm3<-lm(weight~thick+height+breadth,data=logbooks)
+  summary(logbooks.lm3)$coef 
+```
+
+There is a negative correlation between weight and thickness/height/breadth
+At 0 thickness/height the weight is -0.71 and with the increase in Weight by 1 the thickness will increase by 0.46  and height by 0.15 and breadth by 1.87 
+However we can see a low confidence intervals 
+  
+We can see very different results from oddboks dataset as books may be 
+ chosen in such a way to produce odd results
+  
+ 
+ 
